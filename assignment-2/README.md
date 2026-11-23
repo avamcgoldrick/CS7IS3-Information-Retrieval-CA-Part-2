@@ -36,6 +36,17 @@ mvn package                     # produces target/ir-assignment-2.jar
 | `trec_eval/` | trec_eval source |
 | `index/`, `runs/` | Generated locally, git-ignored |
 
+## Indexing
+
+```
+java -jar target/ir-assignment-2.jar parse-trec    # optional: parse only, check counts (~1 min)
+java -jar target/ir-assignment-2.jar index-trec    # build ./index with the English analyzer
+```
+
+`index-trec` takes optional arguments `[collection-root] [analyzer] [index-dir]`. Both commands stop with an error unless exactly 528,155 documents are found.
+
+Index fields: `docno` (stored), `source` (ft/fbis/latimes/fr94, stored), `title` (stored), `body`, and `content` (title + body, with term vectors for query expansion).
+
 ## Evaluating a run
 
 ```

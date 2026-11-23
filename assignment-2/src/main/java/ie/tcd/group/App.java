@@ -12,13 +12,10 @@ public class App {
         String example = args[0];
         String[] exampleArgs = Arrays.copyOfRange(args, 1, args.length);
         switch (example) {
-            case "create-index" -> CreateIndex.main(exampleArgs);
-            case "index-corpus" -> IndexCorpus.main(exampleArgs);
-            case "boolean-query" -> BooleanQueries.main(exampleArgs);
             case "interactive-query" -> QueryIndex.main(exampleArgs);
             case "batch-query" -> BatchQuery.main(exampleArgs);
-            case "postings-demo" -> PostingsDemo.main(exampleArgs);
-            case "split-cranfield-data" -> SplitCranfieldData.main(exampleArgs);
+            case "parse-trec" -> TrecParser.main(exampleArgs);
+            case "index-trec" -> IndexTrec.main(exampleArgs);
             default -> {
                 printUsage();
                 System.exit(1);
@@ -26,26 +23,23 @@ public class App {
         }
     }    
 
-    // Print how to run each example.
+    // Print how to run each command.
     private static void printUsage() {
         System.out.println("""
-            Usage: java -jar target/ir-assignment-2.jar <example> [args...]
+            Usage: java -jar target/ir-assignment-2.jar <command> [args...]
 
-            Examples:
-              create-index                      Example 1: index a hard-coded document
-              index-corpus <files|folders>      Example 2: index a corpus
-              boolean-query                     Example 3: query the index with a hard-coded BooleanQuery
-              interactive-query                 Example 4: interactive QueryParser
-              postings-demo <files|folders>     Example 5: index the corpus with term vectors and print term stats
-              split-cranfield-data              Example 6: split the cranfield dataset into individual files
-              index-corpus <files|folders> [analyzer]
-                    Index corpus using standard, english, whitespace, or custom
-
+            Commands:
+              parse-trec [collection-root]
+                    Parse the TREC collection without indexing and print counts per source
+              index-trec [collection-root] [analyzer] [index-dir]
+                    Index the TREC collection (defaults: "collection/Assignment Two", english, index)
+              interactive-query
+                    Search the index interactively
               batch-query [query-file] [run-file] [analyzer] [similarity] [run-tag]
                     Run batch queries using the selected analyzer and similarity
-            
+
             Example command:
-              java -jar target/ir-assignment-2.jar index-corpus data/example/corpus
+              java -jar target/ir-assignment-2.jar index-trec
             """);
     }
 }
