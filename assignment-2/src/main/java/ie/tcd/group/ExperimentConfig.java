@@ -25,9 +25,6 @@ public final class ExperimentConfig {
 
             case "custom":
                 return new CustomEnglishAnalyzer();
-            
-            case "unstemmed":
-                return new UnstemmedEnglishAnalyzer();
 
             default:
                 throw new IllegalArgumentException(

@@ -17,8 +17,6 @@ public class App {
             case "boolean-query" -> BooleanQueries.main(exampleArgs);
             case "interactive-query" -> QueryIndex.main(exampleArgs);
             case "batch-query" -> BatchQuery.main(exampleArgs);
-            case "stopword-candidates" -> StopWordCandidates.main(exampleArgs);
-            case "synonym-candidates" -> SynonymCandidates.main(exampleArgs);
             case "postings-demo" -> PostingsDemo.main(exampleArgs);
             case "split-cranfield-data" -> SplitCranfieldData.main(exampleArgs);
             default -> {
@@ -31,7 +29,7 @@ public class App {
     // Print how to run each example.
     private static void printUsage() {
         System.out.println("""
-            Usage: java -jar target/ir-demo.jar <example> [args...]
+            Usage: java -jar target/ir-assignment-2.jar <example> [args...]
 
             Examples:
               create-index                      Example 1: index a hard-coded document
@@ -47,7 +45,7 @@ public class App {
                     Run batch queries using the selected analyzer and similarity
             
             Example command:
-              java -jar target/ir-demo.jar index-corpus data/example/corpus
+              java -jar target/ir-assignment-2.jar index-corpus data/example/corpus
             """);
     }
 }

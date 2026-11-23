@@ -1,7 +1,8 @@
+#!/usr/bin/env bash
 set -euo pipefail
 
 
-JAR="target/ir-assignment-1.jar"
+JAR="target/ir-assignment-2.jar"
 CORPUS="data/corpus"
 QUERIES="data/cran.qry"
 QRELS="data/cranqrel"
