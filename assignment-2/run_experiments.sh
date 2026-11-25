@@ -3,14 +3,14 @@ set -euo pipefail
 
 
 JAR="target/ir-assignment-2.jar"
-CORPUS="data/corpus"
-QUERIES="data/cran.qry"
-QRELS="data/cranqrel"
+CORPUS="collection/Assignment Two"
+QUERIES="data/collection.qry"
+QRELS="data/qrels.assignment2.part1"
 RUN_DIR="runs"
-RESULTS="short-results.tsv"
+RESULTS="results.tsv"
 
 ANALYZERS=(standard english whitespace custom)
-MODELS=(bm25-ideal tfidf)
+MODELS=(bm25 bm25-low-k1 bm25-high-k1 bm25-low-b bm25-high-b bm25-ideal tfidf)
 
 for file in "$JAR" "$QUERIES" "$QRELS"; do
     if [[ ! -f "$file" ]]; then
@@ -36,7 +36,7 @@ for analyzer in "${ANALYZERS[@]}"; do
     echo "Building index: $analyzer"
     echo "======================================"
 
-    java -jar "$JAR" index-corpus "$CORPUS" "$analyzer"
+    java -jar "$JAR" index-trec "$CORPUS" "$analyzer" index
 
     for model in "${MODELS[@]}"; do
         run="$RUN_DIR/${model}-${analyzer}.run"
