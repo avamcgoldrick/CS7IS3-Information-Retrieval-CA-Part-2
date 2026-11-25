@@ -23,49 +23,64 @@ import org.apache.lucene.store.Directory;
 
 public class BatchQuery {
 
-    private static class CranfieldQuery {
+    private static class TrecQuery {
         String id;
         String text;
 
-        CranfieldQuery(String id, String text) {
+        TrecQuery(String id, String text) {
             this.id = id;
             this.text = text;
         }
     }
 
-    private static List<CranfieldQuery> readQueries(Path path)
+    private static List<TrecQuery> readQueries(Path path)
             throws IOException {
 
-        List<CranfieldQuery> queries = new ArrayList<>();
+        List<TrecQuery> queries = new ArrayList<>();
+
         String currentId = null;
         StringBuilder text = new StringBuilder();
         boolean readingText = false;
-        int queryNumber = 0;
 
         for (String line : Files.readAllLines(
                 path, StandardCharsets.ISO_8859_1)) {
 
-            if (line.matches("^\\.I\\s+\\d+\\s*$")) {
+            line = line.trim();
+
+            if (line.startsWith(".I")) {
+
                 if (currentId != null) {
-                    queries.add(new CranfieldQuery(
-                        currentId, text.toString().trim()));
+                    queries.add(new TrecQuery(
+                            currentId, text.toString().trim()));
                 }
 
-                currentId = Integer.toString(++queryNumber);
+                String[] parts = line.split("\\s+");
+
+                if (parts.length < 2) {
+                    throw new IOException(
+                            "Invalid query ID line: " + line);
+                }
+
+                currentId = parts[1];
+
                 text.setLength(0);
                 readingText = false;
 
-            } else if (line.trim().equals(".W")) {
+            } else if (line.equals(".W")) {
+
                 readingText = true;
 
             } else if (readingText) {
-                text.append(line).append(' ');
+
+                if (!line.isEmpty()) {
+                    text.append(line).append(' ');
+                }
             }
         }
 
         if (currentId != null) {
-            queries.add(new CranfieldQuery(
-                currentId, text.toString().trim()));
+            queries.add(new TrecQuery(
+                    currentId, text.toString().trim()));
         }
 
         return queries;
@@ -74,97 +89,118 @@ public class BatchQuery {
     public static void main(String[] args) throws IOException {
 
         Path queryFile = Paths.get(
-            args.length > 0 ? args[0] : "data/cran.qry");
+                args.length > 0 ? args[0] : "queries/combined.qry");
 
         Path runFile = Paths.get(
-            args.length > 1 ? args[1] : "runs/bm25-standard.run");
+                args.length > 1 ? args[1]
+                        : "runs/bm25-standard-combined.run");
 
         String analyzerName =
-            args.length > 2 ? args[2] : "standard";
+                args.length > 2 ? args[2] : "standard";
 
         String similarityName =
-            args.length > 3 ? args[3] : "bm25";
+                args.length > 3 ? args[3] : "bm25";
 
         String runTag =
-            args.length > 4 ? args[4]
-                : similarityName + "_" + analyzerName;
+                args.length > 4 ? args[4]
+                        : similarityName + "-" + analyzerName;
+
+        if (!Files.exists(queryFile)) {
+            throw new IOException(
+                    "Query file not found: " + queryFile);
+        }
 
         Path parent = runFile.toAbsolutePath().getParent();
+
         if (parent != null) {
             Files.createDirectories(parent);
         }
 
-        List<CranfieldQuery> queries = readQueries(queryFile);
+        List<TrecQuery> queries = readQueries(queryFile);
+
+        System.out.println("Queries read: " + queries.size());
+
+        if (queries.isEmpty()) {
+            throw new IOException(
+                    "No queries were read. Check the query file format.");
+        }
 
         try (Analyzer analyzer =
-                 ExperimentConfig.createAnalyzer(analyzerName);
+                     ExperimentConfig.createAnalyzer(analyzerName);
+
              Directory directory = Common.openIndexDirectory();
+
              DirectoryReader reader = DirectoryReader.open(directory);
+
              BufferedWriter writer = Files.newBufferedWriter(
-                 runFile, StandardCharsets.UTF_8)) {
+                     runFile, StandardCharsets.UTF_8)) {
 
             IndexSearcher searcher = new IndexSearcher(reader);
 
             Similarity similarity =
-                ExperimentConfig.createSimilarity(similarityName);
+                    ExperimentConfig.createSimilarity(similarityName);
+
             searcher.setSimilarity(similarity);
 
             QueryParser parser =
-                new QueryParser("content", analyzer);
+                    new QueryParser("content", analyzer);
 
             int maxResults = 1400;
 
-            for (CranfieldQuery cq : queries) {
-                if (cq.text.isBlank()) {
+            int processed = 0;
+
+            for (TrecQuery tq : queries) {
+
+                if (tq.text.isBlank()) {
                     System.err.println(
-                        "Skipping empty query: " + cq.id);
+                            "Skipping empty query: " + tq.id);
                     continue;
                 }
 
                 try {
                     Query query = parser.parse(
-                        QueryParser.escape(cq.text));
+                            QueryParser.escape(tq.text));
 
                     ScoreDoc[] hits =
-                        searcher.search(query, maxResults).scoreDocs;
+                            searcher.search(query, maxResults).scoreDocs;
 
                     for (int rank = 0; rank < hits.length; rank++) {
+
                         Document doc = reader.storedFields()
-                            .document(hits[rank].doc);
+                                .document(hits[rank].doc);
 
-                        String filename = doc.get("filename");
+                        String docId = doc.get("docno");
 
-                        if (filename == null) {
+                        if (docId == null) {
                             throw new IOException(
-                                "Missing stored filename field.");
+                                    "Missing stored docno field.");
                         }
 
-                        String docId = Paths.get(filename)
-                            .getFileName().toString()
-                            .replaceFirst("\\.txt$", "");
-
                         writer.write(String.format(
-                            Locale.ROOT,
-                            "%s Q0 %s %d %.8f %s%n",
-                            cq.id,
-                            docId,
-                            rank + 1,
-                            hits[rank].score,
-                            runTag));
+                                Locale.ROOT,
+                                "%s Q0 %s %d %.8f %s%n",
+                                tq.id,
+                                docId,
+                                rank + 1,
+                                hits[rank].score,
+                                runTag));
                     }
 
+                    processed++;
+
                     System.out.printf(
-                        "Query %s: %d results%n",
-                        cq.id, hits.length);
+                            "Query %s: %d results%n",
+                            tq.id, hits.length);
 
                 } catch (ParseException e) {
+
                     System.err.println(
-                        "Could not parse query " + cq.id + ": "
-                            + e.getMessage());
+                            "Could not parse query " + tq.id
+                                    + ": " + e.getMessage());
                 }
             }
 
-            System.out.println("Queries processed: " + queries.size());
+            System.out.println("Queries processed: " + processed);
             System.out.println("Analyzer: " + analyzerName);
             System.out.println("Similarity: " + similarityName);
             System.out.println("Run file: " + runFile.toAbsolutePath());
