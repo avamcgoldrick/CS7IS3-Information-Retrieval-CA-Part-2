@@ -7,7 +7,7 @@ QRELS="data/qrels.assignment2.part1"
 RUN_DIR="runs"
 RESULTS="results.tsv"
 
-QUERY_TYPES=(title description narrative combined)
+QUERY_TYPES=(title description narrative combined-title-description combined-title-narrative combined-description-narrative combined-all weighted-title)
 ANALYZERS=(standard english whitespace custom)
 MODELS=(bm25 bm25-low-k1 bm25-high-k1 bm25-low-b bm25-high-b bm25-ideal tfidf)
 

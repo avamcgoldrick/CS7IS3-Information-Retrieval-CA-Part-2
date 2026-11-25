@@ -95,8 +95,20 @@ public class QueryGeneration {
                         case "narrative":
                             queryText = topic.narrative;
                             break;
-                        case "combined":
+                        case "combined-title-description":
+                            queryText = String.join(" ", topic.title, topic.description);
+                            break;
+                        case "combined-title-narrative":
+                            queryText = String.join(" ", topic.title, topic.narrative);
+                            break;
+                        case "combined-description-narrative":
+                            queryText = String.join(" ", topic.description, topic.narrative);
+                            break;
+                        case "combined-all":
                             queryText = String.join(" ", topic.title, topic.description, topic.narrative);
+                            break;
+                        case "weighted-title":
+                            queryText = String.join(" ", topic.title, topic.title, topic.description);
                             break;
                         default:
                             throw new IllegalArgumentException("Unknown query type: " + queryType);
@@ -162,8 +174,32 @@ public static void main(String[] args) throws IOException {
 
         writeQueries(
             topics,
-            outputDirectory.resolve("combined.qry"),
-            "combined"
+            outputDirectory.resolve("combined-title-description.qry"),
+            "combined-title-description"
+        );
+
+        writeQueries(
+            topics,
+            outputDirectory.resolve("combined-title-narrative.qry"),
+            "combined-title-narrative"
+        );
+
+        writeQueries(
+            topics,
+            outputDirectory.resolve("combined-description-narrative.qry"),
+            "combined-description-narrative"
+        );
+
+        writeQueries(
+            topics,
+            outputDirectory.resolve("combined-all.qry"),
+            "combined-all"
+        );
+
+        writeQueries(
+            topics,
+            outputDirectory.resolve("weighted-title.qry"),
+            "weighted-title"
         );
 
         System.out.println("Topics read: " + topics.size());
