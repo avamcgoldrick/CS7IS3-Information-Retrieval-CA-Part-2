@@ -16,6 +16,7 @@ public class App {
             case "batch-query" -> BatchQuery.main(exampleArgs);
             case "parse-trec" -> TrecParser.main(exampleArgs);
             case "index-trec" -> IndexTrec.main(exampleArgs);
+            case "generate-queries" -> QueryGeneration.main(exampleArgs);
             default -> {
                 printUsage();
                 System.exit(1);
@@ -37,6 +38,8 @@ public class App {
                     Search the index interactively
               batch-query [query-file] [run-file] [analyzer] [similarity] [run-tag]
                     Run batch queries using the selected analyzer and similarity
+              generate-queries [topic-file] [output-dir] [query-type]
+                    Generate queries from the topic file and write to the output directory
 
             Example command:
               java -jar target/ir-assignment-2.jar index-trec
