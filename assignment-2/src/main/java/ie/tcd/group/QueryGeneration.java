@@ -2,6 +2,7 @@ package ie.tcd.group;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -209,9 +210,8 @@ public static void main(String[] args) throws IOException {
                 + outputDirectory.toAbsolutePath()
         );
 
-        System.out.println(" - title.qry");
-        System.out.println(" - description.qry");
-        System.out.println(" - narrative.qry");
-        System.out.println(" - combined.qry");
+        for(File files : outputDirectory.toFile().listFiles()) {
+            System.out.println(" - " + files.getName());
+        }
     }
 }
